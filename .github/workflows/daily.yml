@@ -1,0 +1,74 @@
+name: MLB Edge Daily Pipeline
+
+on:
+  schedule:
+    - cron: '0 16 * * *'
+  workflow_dispatch:
+
+permissions:
+  contents: write
+  pages: write
+  id-token: write
+
+concurrency:
+  group: "mlb-edge-daily"
+  cancel-in-progress: false
+
+jobs:
+  run-and-publish:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repo
+        uses: actions/checkout@v4
+
+      - name: Setup Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+
+      - name: Install dependencies
+        run: |
+          pip install requests beautifulsoup4
+
+      - name: Run MLB Edge pipeline
+        run: python run.py
+        env:
+          TZ: America/New_York
+
+      - name: Score yesterday
+        run: python score_yesterday.py
+        env:
+          TZ: America/New_York
+
+      - name: Commit updated logs & report
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          git add data/predictions_log.json data/accuracy.json output/mlb_edge_report.html
+          git diff --cached --quiet || git commit -m "Daily run: $(date +%Y-%m-%d)"
+          git push
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Upload report artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: mlb-report-${{ github.run_id }}
+          path: output/mlb_edge_report.html
+
+      - name: Setup Pages
+        uses: actions/configure-pages@v5
+
+      - name: Copy report to _site
+        run: |
+          mkdir -p _site
+          cp output/mlb_edge_report.html _site/index.html
+          cp data/accuracy.json _site/accuracy.json || true
+
+      - name: Upload to GitHub Pages
+        uses: actions/upload-pages-artifact@v3
+        with:
+          path: _site
+
+      - name: Deploy to GitHub Pages
+        uses: actions/deploy-pages@v4

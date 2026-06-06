@@ -1,0 +1,16 @@
+# Cache and generated files
+__pycache__/
+*.pyc
+*.pyo
+data/cache/
+output/*.html
+
+# Logs
+data/cron.log
+
+# OS files
+.DS_Store
+Thumbs.db
+
+# Sensitive
+data/.git-credentials

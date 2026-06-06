@@ -1,0 +1,80 @@
+# ⚾ MLB Edge v2.4
+
+**Free, automated MLB betting analytics with physics-based weather, umpire analytics, F5 analysis, and a publicly verified track record.**
+
+[📊 Live Report](https://yourusername.github.io/your-repo-name/) · [📈 Accuracy Dashboard](https://yourusername.github.io/your-repo-name/accuracy.html)
+
+---
+
+## What It Does
+
+Every morning at ~11 AM ET, MLB Edge automatically:
+
+1. Fetches today's schedule, probable pitchers, standings, lineups
+2. Pulls Statcast xERA/xwOBA from Baseball Savant (CSV, no API key)
+3. Computes physics-based weather impact (air density, wind projection, carry adjustment)
+4. Cross-references the umpire database (59 umpires, run impact + K/BB rates)
+5. Calculates convergence score across 7 signals (Base Model, F5 Pitcher, Platoon, Home/Road, Streaks, Bullpen, Weather)
+6. Generates EV, Kelly sizing, NRFI/YRFI, totals edge, SGP suggestions, and auto-narrative
+7. **Logs every pick to `predictions_log.json`**
+8. **Scores yesterday's picks against real box scores**
+9. Publishes a live HTML report to GitHub Pages
+
+## Key Metrics (Tracked Automatically)
+
+| Market | Backtest | Live Tracking |
+|---|---|---|
+| Moneyline (all) | 59.0% | ✅ Auto-scored daily |
+| NRFI/YRFI | 68.2% | ✅ Auto-scored daily |
+| Totals | Calibrated (÷0.48+0.5) | ✅ Auto-scored daily |
+| F5 Winner | 50.0% (convergence only) | ✅ Logged, not standalone |
+
+## Architecture
+
+- **Zero API keys required** — MLB Stats API, ESPN Scoreboard, Open-Meteo, Baseball Savant are all free and public
+- **Zero cost to run** — GitHub Actions runs the pipeline on Microsoft's servers
+- **Poor-computer friendly** — All caching is aggressive; CSV downloads are parsed without pandas
+- **Fully transparent** — Every pick shows its signal breakdown, not a black-box grade
+
+## Files
+
+| File | Purpose |
+|---|---|
+| `run.py` | Main pipeline — generates daily report |
+| `score_yesterday.py` | Nightly scorer — resolves pending picks vs box scores |
+| `prediction_logger.py` | Logs all picks before first pitch |
+| `edge_calculator.py` | EV, grades, Kelly, NRFI, FIP, totals, SGP, narrative |
+| `convergence.py` | 7-signal weighted convergence engine |
+| `weather_fetcher.py` | Open-Meteo physics integration |
+| `umpire_fetcher.py` | 59-umpire database with numeric impact |
+| `statcast_fetcher.py` | Baseball Savant CSV scraper (xERA, xwOBA, barrel%) |
+| `lines_fetcher.py` | ESPN scoreboard parser (moneyline, totals, open/close) |
+| `f5_analytics.py` | First-5-innings ERA/quality estimation |
+| `situational_engine.py` | Travel fatigue, timezone, fade-public, game script |
+| `reporter.py` | HTML report generator |
+| `injury_fetcher.py` | IL/injury cross-reference for probable pitchers |
+
+## Running Locally
+
+```bash
+# One-time
+pip install requests beautifulsoup4
+
+# Generate today's report
+python run.py
+
+# Score yesterday's pending picks
+python score_yesterday.py
+```
+
+Open `output/mlb_edge_report.html` in your browser.
+
+## Automation Setup
+
+This repo includes a GitHub Actions workflow that runs daily and publishes the report to GitHub Pages. See setup instructions below.
+
+---
+
+## License
+
+MIT. For educational and entertainment purposes only. Gamble responsibly.
